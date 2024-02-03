@@ -1,37 +1,27 @@
 #![feature(fs_try_exists)]
+#![feature(absolute_path)]
 
 mod config;
 use config::config::*;
 
-use std::{env, fs};
+mod safety_checks;
+use safety_checks::safety_checks::*;
+
+use std::{env, path};
 
 fn main() -> () {
-    // let paths_in_dir = get_dir_contents(".");
-    // dbg!(paths_in_dir);
-    let cwdjunk = env::current_dir().unwrap();
-    let cwd = cwdjunk.to_str().to_owned().ok_or("").unwrap();
-    let cfg_path = append_cfg_to_path(cwd);
+    let args = env::args().collect::<Vec<String>>();
+
+    let cfg_arg = match args.get(1) {
+        Some(s) => s.to_owned(),
+        None => ".".to_owned(),
+    };
+    let cfg_path = path::absolute(cfg_arg).unwrap();
+    let cfg_path = append_cfg_to_path(cfg_path.to_str().unwrap());
     println!("Using config '{}'...", cfg_path);
 
     let cfg = open_config(&cfg_path);
+    let cfg = reject_missing_origin_files(&cfg);
+    let cfg = absolutify_home_paths(&cfg);
     dbg!(cfg);
-}
-
-fn get_dir_contents(dir: &str) -> Vec<(String, (bool, bool))> {
-    fs::read_dir(dir)
-        .unwrap()
-        .map(|e| {
-            let entry_path = match e.unwrap().path().to_str() {
-                Some(str) => str.to_owned(),
-                None => "".to_owned(),
-            };
-
-            let (is_dir, is_file) = (|| {
-                let m = fs::metadata(entry_path.clone()).unwrap();
-                (m.is_dir(), m.is_file())
-            })();
-
-            (entry_path.clone(), (is_dir, is_file))
-        })
-        .collect()
 }

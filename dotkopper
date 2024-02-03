@@ -1,1 +1,2 @@
 ./Cargo.toml ~/.config/myapp/
+./.tmux.conf ~/.config/myapp/
