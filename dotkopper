@@ -1,2 +1,6 @@
 ./Cargo.toml ~/.config/myapp/
 ./.tmux.conf ~/.config/myapp/
+
+ö.txt ~/ö.txt
+/etc/grub.cfg ~/xd.cfg
+./scary_file.cfg /scary/root/path/

@@ -2,12 +2,16 @@
 #![feature(absolute_path)]
 
 mod config;
-use config::config::*;
+use config::parsers::*;
+use config::*;
 
-mod safety_checks;
-use safety_checks::safety_checks::*;
+use std::{
+    env,
+    path::{self, PathBuf},
+};
 
-use std::{env, path};
+mod utils;
+use utils::exit;
 
 fn main() -> () {
     let args = env::args().collect::<Vec<String>>();
@@ -16,12 +20,25 @@ fn main() -> () {
         Some(s) => s.to_owned(),
         None => ".".to_owned(),
     };
-    let cfg_path = path::absolute(cfg_arg).unwrap();
-    let cfg_path = append_cfg_to_path(cfg_path.to_str().unwrap());
+    let maybe_cfg_or_cfg_dir = path::absolute(cfg_arg.clone()).unwrap();
+    let (cfg_parent_path, cfg_path) = (|| {
+        let parent_path = get_cfg_parent(&maybe_cfg_or_cfg_dir).unwrap_or_else(|| {
+            exit::cfg_not_found(cfg_arg);
+            unreachable!();
+        });
+
+        let cfg_path = PathBuf::from(&parent_path)
+            .join("dotkopper")
+            .to_string_lossy()
+            .to_string();
+
+        (parent_path, cfg_path)
+    })();
     println!("Using config '{}'...", cfg_path);
 
     let cfg = open_config(&cfg_path);
-    let cfg = reject_missing_origin_files(&cfg);
-    let cfg = absolutify_home_paths(&cfg);
+    dbg!(&cfg);
+    let cfg = absolute_paths(&cfg_parent_path, &cfg);
+    let cfg = cfg_unwrap_some_pair_entries(cfg);
     dbg!(cfg);
 }
