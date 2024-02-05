@@ -1,11 +1,42 @@
 pub mod parsers;
 
-use std::{fs, path::PathBuf};
+use std::{
+    env, fs,
+    path::{self, PathBuf},
+};
 
-pub fn open_config(path: &str) -> Vec<(String, String)> {
+use crate::dotconfig::*;
+use crate::exit;
+
+pub fn get_cfg_path() -> String {
+    let args = env::args().collect::<Vec<String>>();
+
+    let cfg_arg = match args.get(1) {
+        Some(s) => s.to_owned(),
+        None => ".".to_owned(),
+    };
+    let maybe_cfg_or_cfg_dir = path::absolute(cfg_arg.clone()).unwrap();
+    let (_cfg_parent_path, cfg_path) = (|| {
+        let parent_path = get_cfg_parent(&maybe_cfg_or_cfg_dir).unwrap_or_else(|| {
+            exit::cfg_not_found(cfg_arg);
+            unreachable!();
+        });
+
+        let cfg_path = PathBuf::from(&parent_path)
+            .join("dotkopper")
+            .to_string_lossy()
+            .to_string();
+
+        (parent_path, cfg_path)
+    })();
+
+    cfg_path
+}
+
+pub fn open_config(path: &str) -> Vec<Dotfile> {
     let cfg = fs::read_to_string(path).unwrap();
     let lines = cfg.split("\n").collect::<Vec<&str>>();
-    let cfg_entries: Vec<Option<(String, String)>> = lines
+    let cfg_entries: Vec<Option<Dotfile>> = lines
         .iter()
         .map(|line| {
             let words = line
@@ -16,7 +47,7 @@ pub fn open_config(path: &str) -> Vec<(String, String)> {
             if words.len() == 2 {
                 let (origin, target) = (words[0].to_owned(), words[1].to_owned());
                 if valid_target(&target) {
-                    Some((origin, target))
+                    Some(Dotfile { origin, target })
                 } else {
                     None
                 }
