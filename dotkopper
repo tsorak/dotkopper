@@ -1,5 +1,9 @@
 ./Cargo.toml ~/.config/myapp/
-./.tmux.conf ~/.config/myapp/
+./Cargo.toml ~/.config/myfile
+./Cargo.toml ~/.config/non_existing_link
+./.tmux.conf ~/.config/myconf
+./Cargo.toml ~/.config/mydir
+./Cargo.toml ~/.config/hardlink
 
 ö.txt ~/ö.txt
 /etc/grub.cfg ~/xd.cfg

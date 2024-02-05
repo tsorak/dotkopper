@@ -16,6 +16,12 @@ use utils::exit;
 mod path_validator;
 use path_validator::*;
 
+// fn main() -> () {
+//     let p = PathBuf::from("/somedir/target_is_dir_path/");
+//
+//     dbg!(p.to_string_lossy().to_string().ends_with("/"));
+// }
+
 fn main() -> () {
     let args = env::args().collect::<Vec<String>>();
 
@@ -45,5 +51,7 @@ fn main() -> () {
     let cfg = unwrap_cfg_entries(cfg);
     dbg!(&cfg);
     let cfg = omit_missing_origin_paths(cfg);
+    dbg!(&cfg);
+    let cfg = omit_non_symlink_target_paths(cfg);
     dbg!(&cfg);
 }
