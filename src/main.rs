@@ -13,6 +13,9 @@ use std::{
 mod utils;
 use utils::exit;
 
+mod path_validator;
+use path_validator::*;
+
 fn main() -> () {
     let args = env::args().collect::<Vec<String>>();
 
@@ -40,5 +43,7 @@ fn main() -> () {
     dbg!(&cfg);
     let cfg = absolute_paths(&cfg_parent_path, &cfg);
     let cfg = unwrap_cfg_entries(cfg);
-    dbg!(cfg);
+    dbg!(&cfg);
+    let cfg = omit_missing_origin_paths(cfg);
+    dbg!(&cfg);
 }

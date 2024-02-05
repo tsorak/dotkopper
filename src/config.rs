@@ -79,3 +79,10 @@ pub fn unwrap_cfg_entries(cfg: Vec<(Option<String>, Option<String>)>) -> Vec<(St
         })
         .collect()
 }
+
+pub fn unwrap_cfg_pairs(cfg: Vec<Option<(String, String)>>) -> Vec<(String, String)> {
+    cfg.iter()
+        .map(|p| p.clone())
+        .filter_map(|p| if p.is_some() { Some(p.unwrap()) } else { None })
+        .collect()
+}
