@@ -64,9 +64,7 @@ pub fn get_cfg_parent(p: &PathBuf) -> Option<String> {
     }
 }
 
-pub fn cfg_unwrap_some_pair_entries(
-    cfg: Vec<(Option<String>, Option<String>)>,
-) -> Vec<(String, String)> {
+pub fn unwrap_cfg_entries(cfg: Vec<(Option<String>, Option<String>)>) -> Vec<(String, String)> {
     cfg.iter()
         .filter_map(|p| {
             let (o, t) = p.clone();

@@ -39,6 +39,6 @@ fn main() -> () {
     let cfg = open_config(&cfg_path);
     dbg!(&cfg);
     let cfg = absolute_paths(&cfg_parent_path, &cfg);
-    let cfg = cfg_unwrap_some_pair_entries(cfg);
+    let cfg = unwrap_cfg_entries(cfg);
     dbg!(cfg);
 }
