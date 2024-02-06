@@ -6,7 +6,7 @@ use std::{
 };
 
 use crate::dotconfig::*;
-use crate::exit;
+use crate::utils::exit;
 
 pub fn get_cfg_path() -> String {
     let args = env::args().collect::<Vec<String>>();
@@ -47,7 +47,7 @@ pub fn open_config(path: &str) -> Vec<Dotfile> {
             if words.len() == 2 {
                 let (origin, target) = (words[0].to_owned(), words[1].to_owned());
                 if valid_target(&target) {
-                    Some(Dotfile { origin, target })
+                    Some(Dotfile::new(origin, target))
                 } else {
                     None
                 }
