@@ -1,8 +1,8 @@
 use std::env;
 use std::process::exit;
 
-pub fn cfg_not_found(cfg_arg: String) -> () {
-    let attempted_path = if cfg_arg.starts_with("/") {
+pub fn cfg_not_found(cfg_arg: String) {
+    let attempted_path = if cfg_arg.starts_with('/') {
         cfg_arg
     } else {
         env::current_dir().unwrap().to_string_lossy().to_string()

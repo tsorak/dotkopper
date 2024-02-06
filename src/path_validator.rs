@@ -3,7 +3,7 @@ use std::path::PathBuf;
 
 pub fn omit_missing_origin_paths(cfg: Vec<(String, String)>) -> Vec<(String, String)> {
     cfg.iter()
-        .map(|p| {
+        .filter_map(|p| {
             let o: &str = p.0.as_ref();
 
             let o = PathBuf::from(o);
@@ -14,19 +14,18 @@ pub fn omit_missing_origin_paths(cfg: Vec<(String, String)>) -> Vec<(String, Str
                 None
             }
         })
-        .filter_map(|p| if p.is_some() { Some(p.unwrap()) } else { None })
         .collect()
 }
 
 pub fn omit_non_symlink_target_paths(cfg: Vec<(String, String)>) -> Vec<(String, String)> {
     cfg.iter()
-        .map(|p| {
+        .filter_map(|p| {
             let t_str: &str = p.1.as_ref();
             let o: &str = p.0.as_ref();
 
             let t = PathBuf::from(t_str);
 
-            if t_str.to_string().ends_with("/") {
+            if t_str.to_string().ends_with('/') {
                 eprintln!("BAD TARGET '{}' points to a directory, skipping.", t_str);
                 None
             } else {
@@ -52,15 +51,12 @@ pub fn omit_non_symlink_target_paths(cfg: Vec<(String, String)>) -> Vec<(String,
                                 Err(_e) => {
                                     eprintln!(
                                         "There is already a file at '{}', skipping.",
-                                        t.to_string_lossy().to_string()
+                                        t.to_string_lossy()
                                     );
                                 }
                             }
                         } else if m.is_dir() {
-                            eprintln!(
-                                "Target '{}' is a directory, skipping.",
-                                t.to_string_lossy().to_string()
-                            );
+                            eprintln!("Target '{}' is a directory, skipping.", t.to_string_lossy());
                         } else {
                             dbg!(m);
                             panic!("Unknown target encountered... symlink?");
@@ -71,6 +67,5 @@ pub fn omit_non_symlink_target_paths(cfg: Vec<(String, String)>) -> Vec<(String,
                 }
             }
         })
-        .filter_map(|p| if p.is_some() { Some(p.unwrap()) } else { None })
         .collect()
 }

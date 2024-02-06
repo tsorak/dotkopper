@@ -12,7 +12,7 @@ use utils::exit;
 
 mod path_validator;
 
-fn main() -> () {
+fn main() {
     let cfg_path = get_cfg_path();
     println!("Using config '{}'...", cfg_path);
 

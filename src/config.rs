@@ -2,7 +2,7 @@ pub mod parsers;
 
 use std::{
     env, fs,
-    path::{self, PathBuf},
+    path::{self, Path, PathBuf},
 };
 
 use crate::dotconfig::*;
@@ -16,7 +16,7 @@ pub fn get_cfg_path() -> String {
         None => ".".to_owned(),
     };
     let maybe_cfg_or_cfg_dir = path::absolute(cfg_arg.clone()).unwrap();
-    let (_cfg_parent_path, cfg_path) = (|| {
+    let (_cfg_parent_path, cfg_path) = {
         let parent_path = get_cfg_parent(&maybe_cfg_or_cfg_dir).unwrap_or_else(|| {
             exit::cfg_not_found(cfg_arg);
             unreachable!();
@@ -28,19 +28,19 @@ pub fn get_cfg_path() -> String {
             .to_string();
 
         (parent_path, cfg_path)
-    })();
+    };
 
     cfg_path
 }
 
 pub fn open_config(path: &str) -> Vec<Dotfile> {
     let cfg = fs::read_to_string(path).unwrap();
-    let lines = cfg.split("\n").collect::<Vec<&str>>();
-    let cfg_entries: Vec<Option<Dotfile>> = lines
+    let lines = cfg.split('\n').collect::<Vec<&str>>();
+    lines
         .iter()
-        .map(|line| {
+        .filter_map(|line| {
             let words = line
-                .split(" ")
+                .split(' ')
                 .map(|str| str.to_owned())
                 .collect::<Vec<String>>();
 
@@ -55,21 +55,15 @@ pub fn open_config(path: &str) -> Vec<Dotfile> {
                 None
             }
         })
-        .collect();
-
-    cfg_entries.iter().cloned().filter_map(|e| e).collect()
+        .collect()
 }
 
-fn valid_target(t: &String) -> bool {
-    if t.starts_with("~/") || t.starts_with("/") {
-        true
-    } else {
-        false
-    }
+fn valid_target(t: &str) -> bool {
+    t.starts_with("~/") || t.starts_with('/')
 }
 
-pub fn get_cfg_parent(p: &PathBuf) -> Option<String> {
-    let p = p.clone();
+pub fn get_cfg_parent(p: &Path) -> Option<String> {
+    let p = PathBuf::from(p);
 
     let ends_with_cfg_name = p
         .file_name()
@@ -99,21 +93,13 @@ pub fn get_cfg_parent(p: &PathBuf) -> Option<String> {
 
 pub fn unwrap_cfg_entries(cfg: Vec<(Option<String>, Option<String>)>) -> Vec<(String, String)> {
     cfg.iter()
-        .filter_map(|p| {
-            let (o, t) = p.clone();
-
-            if o.is_some() && t.is_some() {
-                Some((o.unwrap(), t.unwrap()))
-            } else {
-                None
-            }
+        .filter_map(|p| match p.clone() {
+            (Some(o), Some(t)) => Some((o, t)),
+            _ => None,
         })
         .collect()
 }
 
 pub fn unwrap_cfg_pairs(cfg: Vec<Option<(String, String)>>) -> Vec<(String, String)> {
-    cfg.iter()
-        .map(|p| p.clone())
-        .filter_map(|p| if p.is_some() { Some(p.unwrap()) } else { None })
-        .collect()
+    cfg.iter().filter_map(|dotfile| dotfile.clone()).collect()
 }
