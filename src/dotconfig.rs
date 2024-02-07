@@ -120,7 +120,16 @@ impl ParseDotfileRelation for (String, String) {
     }
 }
 
-impl ParseDotfileRelation for String {
+impl From<(&'static str, &'static str)> for Dotfile {
+    fn from(v: (&str, &str)) -> Self {
+        Self {
+            origin: v.0.to_string(),
+            target: v.1.to_string(),
+        }
+    }
+}
+
+impl ParseDotfileRelation for &str {
     fn parse_dotfile_relation(&self) -> Option<Dotfile> {
         let words: Vec<&str> = self.split(' ').collect();
         match words[..] {
@@ -131,4 +140,14 @@ impl ParseDotfileRelation for String {
             _ => None,
         }
     }
+}
+
+impl TryFrom<&str> for Dotfile {
+    fn try_from(s: &str) -> Result<Self, Self::Error> {
+        match s.splitn(2, ' ').collect::<Vec<&str>>()[..] {
+            [o, t, ..] => Ok(Self::new(o.to_string(), t.to_string())),
+            _ => Err(()),
+        }
+    }
+    type Error = ();
 }
