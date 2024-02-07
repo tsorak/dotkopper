@@ -1,10 +1,14 @@
 use std::{fmt::Debug, path::Path};
 
-use crate::config::*;
+mod parser;
+use parser::*;
+
+use crate::{config::*, utils::exit};
 
 pub(crate) struct DotConfig {
     pub path: String,
     pub entries: Vec<Dotfile>,
+    home_dir: String,
 }
 
 #[derive(Clone)]
@@ -33,14 +37,24 @@ impl DotConfig {
     pub fn new() -> DotConfig {
         let cfg_path = get_cfg_path();
 
+        let home_dir = match std::env::var("HOME") {
+            Ok(s) => s,
+            Err(_) => {
+                exit::home_var_not_found();
+                unreachable!();
+            }
+        };
+
         DotConfig {
             path: cfg_path.clone(),
             entries: open_config(&cfg_path),
+            home_dir,
         }
     }
 
     pub fn init(&mut self) {
         self.absolute_origins();
+        self.absolute_targets();
     }
 
     fn absolute_origins(&mut self) {
@@ -48,6 +62,14 @@ impl DotConfig {
             .entries
             .iter_mut()
             .filter_map(|dotfile| dotfile.absolute_origin())
+            .collect();
+    }
+
+    fn absolute_targets(&mut self) {
+        self.entries = self
+            .entries
+            .iter_mut()
+            .filter_map(|dotfile| dotfile.absolute_target(&self.home_dir))
             .collect();
     }
 }
@@ -66,6 +88,18 @@ impl Dotfile {
                 Some(v)
             }
             Err(_) => None,
+        }
+    }
+
+    fn absolute_target(&mut self, home_dir: &str) -> Option<Dotfile> {
+        let p = Path::new(&self.target);
+        match parse_target(p, home_dir) {
+            Some(p) => {
+                let mut v = self.clone();
+                v.target = p.to_string_lossy().into();
+                Some(v)
+            }
+            _ => None,
         }
     }
 }

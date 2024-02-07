@@ -4,6 +4,7 @@
 ./.tmux.conf ~/.config/myconf
 ./Cargo.toml ~/.config/mydir
 ./Cargo.toml ~/.config/hardlink
+./Cargo.toml /scary/root/path/
 
 ö.txt ~/ö.txt
 /etc/grub.cfg ~/xd.cfg

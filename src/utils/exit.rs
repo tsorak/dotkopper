@@ -14,3 +14,8 @@ pub fn cfg_not_found(cfg_arg: String) {
     );
     exit(1);
 }
+
+pub fn home_var_not_found() {
+    eprintln!("Could not find the current users HOME.");
+    exit(1);
+}
