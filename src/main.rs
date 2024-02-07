@@ -1,15 +1,9 @@
-#![feature(fs_try_exists)]
-#![feature(absolute_path)]
-
 mod config;
 
-pub mod dotconfig;
-
+mod dotconfig;
 use dotconfig::*;
 
 mod utils;
-
-mod path_validator;
 
 fn main() {
     let mut cfg = DotConfig::new();
