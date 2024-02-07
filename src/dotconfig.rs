@@ -34,7 +34,7 @@ impl Debug for Dotfile {
 }
 
 impl DotConfig {
-    pub fn new() -> DotConfig {
+    pub fn new() -> Self {
         let cfg_path = get_cfg_path();
 
         let home_dir = match std::env::var("HOME") {
@@ -52,25 +52,26 @@ impl DotConfig {
         }
     }
 
-    pub fn init(&mut self) {
-        self.absolute_origins();
-        self.absolute_targets();
+    pub fn init(&mut self) -> &mut Self {
+        self.absolute_origins().absolute_targets()
     }
 
-    fn absolute_origins(&mut self) {
+    fn absolute_origins(&mut self) -> &mut Self {
         self.entries = self
             .entries
             .iter_mut()
             .filter_map(|dotfile| dotfile.absolute_origin())
             .collect();
+        self
     }
 
-    fn absolute_targets(&mut self) {
+    fn absolute_targets(&mut self) -> &mut Self {
         self.entries = self
             .entries
             .iter_mut()
             .filter_map(|dotfile| dotfile.absolute_target(&self.home_dir))
             .collect();
+        self
     }
 }
 
