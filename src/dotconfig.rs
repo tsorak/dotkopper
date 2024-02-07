@@ -1,4 +1,4 @@
-use std::fmt::Debug;
+use std::{fmt::Debug, path::Path};
 
 use crate::config::*;
 
@@ -7,6 +7,7 @@ pub(crate) struct DotConfig {
     pub entries: Vec<Dotfile>,
 }
 
+#[derive(Clone)]
 pub(crate) struct Dotfile {
     pub origin: String,
     pub target: String,
@@ -38,30 +39,34 @@ impl DotConfig {
         }
     }
 
-    pub fn map_origins<F>(&mut self, f: F)
-    where
-        Self: Sized,
-        F: Fn(&str) -> String,
-    {
-        self.entries.iter_mut().for_each(|df| {
-            df.origin = f(&df.origin);
-        });
+    pub fn init(&mut self) {
+        self.absolute_origins();
     }
 
-    fn map_targets<F>(&mut self, f: F)
-    where
-        Self: Sized,
-        F: Fn(&str) -> String,
-    {
-        self.entries.iter_mut().for_each(|df| {
-            df.target = f(&df.target);
-        });
+    fn absolute_origins(&mut self) {
+        self.entries = self
+            .entries
+            .iter_mut()
+            .filter_map(|dotfile| dotfile.absolute_origin())
+            .collect();
     }
 }
 
 impl Dotfile {
     pub fn new(origin: String, target: String) -> Dotfile {
         Dotfile { origin, target }
+    }
+
+    fn absolute_origin(&mut self) -> Option<Dotfile> {
+        let p = Path::new(&self.origin);
+        match p.canonicalize() {
+            Ok(p) => {
+                let mut v = self.clone();
+                v.origin = p.to_string_lossy().into();
+                Some(v)
+            }
+            Err(_) => None,
+        }
     }
 }
 

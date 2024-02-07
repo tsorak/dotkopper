@@ -13,16 +13,8 @@ mod path_validator;
 
 fn main() {
     let mut cfg = DotConfig::new();
+    cfg.init();
     println!("Using config '{}'...", &cfg.path);
-
-    dbg!(&cfg);
-    dbg!(&cfg);
-
-    cfg.map_origins(|_o| "hej".to_string());
-
-    // if !cfg.entries.is_empty() {
-    //     cfg.entries[0].origin.set(String::from("LUL!"));
-    // };
 
     dbg!(&cfg);
 }
