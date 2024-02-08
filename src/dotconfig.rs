@@ -5,37 +5,22 @@ use parser::*;
 
 use crate::{config::*, utils::exit};
 
+#[derive(Debug)]
 pub(crate) struct DotConfig {
     pub path: String,
     pub entries: Vec<Dotfile>,
     home_dir: String,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub(crate) struct Dotfile {
     pub origin: String,
     pub target: String,
 }
 
-impl Debug for DotConfig {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{{\n  path: {},\n  entries: {:#?},\n}}",
-            self.path, self.entries
-        )
-    }
-}
-
-impl Debug for Dotfile {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} -> {}", &self.origin, &self.target)
-    }
-}
-
 impl DotConfig {
     pub fn new() -> Self {
-        let cfg_path = get_cfg_path();
+        let cfg_path = get_cfg_path().to_string_lossy().into();
 
         let home_dir = match std::env::var("HOME") {
             Ok(s) => s,
@@ -46,14 +31,14 @@ impl DotConfig {
         };
 
         DotConfig {
-            path: cfg_path.clone(),
-            entries: open_config(&cfg_path),
+            path: cfg_path,
+            entries: vec![],
             home_dir,
         }
     }
 
     pub fn init(&mut self) -> &mut Self {
-        self.absolute_origins().absolute_targets()
+        self.load_config().absolute_origins().absolute_targets()
     }
 
     fn absolute_origins(&mut self) -> &mut Self {
@@ -105,39 +90,11 @@ impl Dotfile {
     }
 }
 
-pub(crate) trait ParseDotfileRelation {
-    fn parse_dotfile_relation(&self) -> Option<Dotfile>;
-}
-
-impl ParseDotfileRelation for (String, String) {
-    fn parse_dotfile_relation(&self) -> Option<Dotfile> {
-        let (origin, target) = self;
-
-        Some(Dotfile {
-            origin: origin.to_string(),
-            target: target.to_string(),
-        })
-    }
-}
-
 impl From<(&'static str, &'static str)> for Dotfile {
     fn from(v: (&str, &str)) -> Self {
         Self {
             origin: v.0.to_string(),
             target: v.1.to_string(),
-        }
-    }
-}
-
-impl ParseDotfileRelation for &str {
-    fn parse_dotfile_relation(&self) -> Option<Dotfile> {
-        let words: Vec<&str> = self.split(' ').collect();
-        match words[..] {
-            [origin, target] => Some(Dotfile {
-                origin: origin.to_string(),
-                target: target.to_string(),
-            }),
-            _ => None,
         }
     }
 }
