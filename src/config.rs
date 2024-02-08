@@ -1,7 +1,4 @@
-use std::{
-    env, fs,
-    path::{Path, PathBuf},
-};
+use std::{env, fs, path::Path};
 
 use crate::dotconfig::*;
 use crate::std_ext::path::ContainsFile;
@@ -11,7 +8,7 @@ impl DotConfig {
     pub fn load_config(&mut self) -> &mut Self {
         self.entries = fs::read_to_string(&self.path)
             .unwrap_or_else(|_| {
-                exit::cfg_not_found(self.path.clone());
+                exit::cfg_not_found(&self.path);
                 unreachable!();
             })
             .lines()
@@ -28,7 +25,7 @@ impl DotConfig {
     }
 }
 
-pub fn get_cfg_path() -> PathBuf {
+pub fn get_cfg_path() -> Box<Path> {
     let cfg_arg = match env::args().nth(1) {
         Some(s) => s,
         None => ".".to_owned(),
@@ -36,8 +33,8 @@ pub fn get_cfg_path() -> PathBuf {
 
     let p = Path::new(&cfg_arg).canonicalize().unwrap();
     if p.contains_file("dotkopper") {
-        p.join("dotkopper")
+        p.join("dotkopper").into()
     } else {
-        p
+        p.into()
     }
 }

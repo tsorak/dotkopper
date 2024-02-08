@@ -10,7 +10,7 @@ mod std_ext;
 fn main() {
     let mut cfg = DotConfig::new();
     cfg.init();
-    println!("Using config '{}'...", &cfg.path);
+    println!("Using config '{}'...", &cfg.path.display());
 
     dbg!(&cfg);
 }

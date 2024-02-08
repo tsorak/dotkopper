@@ -7,7 +7,7 @@ use crate::{config::*, utils::exit};
 
 #[derive(Debug)]
 pub(crate) struct DotConfig {
-    pub path: String,
+    pub path: Box<Path>,
     pub entries: Vec<Dotfile>,
     home_dir: String,
 }
@@ -20,7 +20,7 @@ pub(crate) struct Dotfile {
 
 impl DotConfig {
     pub fn new() -> Self {
-        let cfg_path = get_cfg_path().to_string_lossy().into();
+        let cfg_path = get_cfg_path();
 
         let home_dir = match std::env::var("HOME") {
             Ok(s) => s,
