@@ -12,10 +12,21 @@ pub(crate) struct DotConfig {
     home_dir: String,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub(crate) struct Dotfile {
-    pub origin: String,
-    pub target: String,
+    pub origin: Box<Path>,
+    pub target: Box<Path>,
+}
+
+impl Debug for Dotfile {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{} -> {}",
+            self.origin.to_string_lossy(),
+            self.target.to_string_lossy()
+        )
+    }
 }
 
 impl DotConfig {
@@ -61,48 +72,49 @@ impl DotConfig {
 }
 
 impl Dotfile {
-    pub fn new(origin: String, target: String) -> Dotfile {
+    pub fn new(o: &str, t: &str) -> Dotfile {
+        let origin: Box<Path> = Path::new(o).into();
+        let target: Box<Path> = Path::new(t).into();
+
         Dotfile { origin, target }
     }
 
     fn absolute_origin(&mut self) -> Option<Dotfile> {
-        let p = Path::new(&self.origin);
+        let p = &mut self.origin;
         match p.canonicalize() {
-            Ok(p) => {
-                let mut v = self.clone();
-                v.origin = p.to_string_lossy().into();
-                Some(v)
+            Ok(absolute_path) => {
+                self.origin = absolute_path.into();
+                Some(self.clone())
             }
             Err(_) => None,
         }
     }
 
     fn absolute_target(&mut self, home_dir: &str) -> Option<Dotfile> {
-        let p = Path::new(&self.target);
+        let p = &self.target;
         match parse_target(p, home_dir) {
-            Some(p) => {
-                let mut v = self.clone();
-                v.target = p.to_string_lossy().into();
-                Some(v)
+            Some(absolute_path) => {
+                self.target = absolute_path.into();
+                Some(self.clone())
             }
-            _ => None,
+            None => None,
         }
     }
 }
 
 impl From<(&'static str, &'static str)> for Dotfile {
     fn from(v: (&str, &str)) -> Self {
-        Self {
-            origin: v.0.to_string(),
-            target: v.1.to_string(),
-        }
+        let origin: Box<Path> = Path::new(v.0).into();
+        let target: Box<Path> = Path::new(v.1).into();
+
+        Dotfile { origin, target }
     }
 }
 
 impl TryFrom<&str> for Dotfile {
     fn try_from(s: &str) -> Result<Self, Self::Error> {
         match s.splitn(2, ' ').collect::<Vec<&str>>()[..] {
-            [o, t, ..] => Ok(Self::new(o.to_string(), t.to_string())),
+            [o, t, ..] => Ok(Self::new(o, t)),
             _ => Err(()),
         }
     }
