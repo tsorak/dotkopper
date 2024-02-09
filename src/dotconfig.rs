@@ -49,7 +49,10 @@ impl DotConfig {
     }
 
     pub fn init(&mut self) -> &mut Self {
-        self.load_config().absolute_origins().absolute_targets()
+        self.load_config()
+            .absolute_origins()
+            .absolute_targets()
+            .filter_nonexistent_targets()
     }
 
     fn absolute_origins(&mut self) -> &mut Self {
@@ -66,6 +69,18 @@ impl DotConfig {
             .entries
             .iter_mut()
             .filter_map(|dotfile| dotfile.absolute_target(&self.home_dir))
+            .collect();
+        self
+    }
+
+    fn filter_nonexistent_targets(&mut self) -> &mut Self {
+        self.entries = self
+            .entries
+            .iter()
+            .filter_map(|dotfile| match dotfile.target_exists() {
+                false => Some(dotfile.clone()),
+                true => None,
+            })
             .collect();
         self
     }
@@ -99,6 +114,10 @@ impl Dotfile {
             }
             None => None,
         }
+    }
+
+    fn target_exists(&self) -> bool {
+        self.target.exists()
     }
 }
 
