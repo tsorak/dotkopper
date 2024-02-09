@@ -1,11 +1,8 @@
-mod config;
-
 mod dotconfig;
-use dotconfig::*;
-
+mod std_ext;
 mod utils;
 
-mod std_ext;
+use dotconfig::DotConfig;
 
 fn main() {
     let mut cfg = DotConfig::new();

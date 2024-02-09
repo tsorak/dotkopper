@@ -1,21 +1,25 @@
-use std::{fmt::Debug, path::Path};
+use std::{
+    fmt::Debug,
+    path::{Path, PathBuf},
+};
 
-mod parser;
-use parser::*;
+mod fs_checks;
+mod load_config;
+mod path_parsers;
 
-use crate::{config::*, utils::exit};
+use crate::utils::exit;
 
 #[derive(Debug)]
 pub(crate) struct DotConfig {
     pub path: Box<Path>,
-    pub entries: Vec<Dotfile>,
+    entries: Vec<Dotfile>,
     home_dir: String,
 }
 
 #[derive(Clone)]
-pub(crate) struct Dotfile {
-    pub origin: Box<Path>,
-    pub target: Box<Path>,
+struct Dotfile {
+    pub origin: Box<PathBuf>,
+    pub target: Box<PathBuf>,
 }
 
 impl Debug for Dotfile {
@@ -31,7 +35,7 @@ impl Debug for Dotfile {
 
 impl DotConfig {
     pub fn new() -> Self {
-        let cfg_path = get_cfg_path();
+        let cfg_path = DotConfig::get_cfg_path();
 
         let home_dir = match std::env::var("HOME") {
             Ok(s) => s,
@@ -52,6 +56,7 @@ impl DotConfig {
         self.load_config()
             .absolute_origins()
             .absolute_targets()
+            .append_origin_filename_to_target_dirs()
             .filter_nonexistent_targets()
     }
 
@@ -73,6 +78,16 @@ impl DotConfig {
         self
     }
 
+    fn append_origin_filename_to_target_dirs(&mut self) -> &mut Self {
+        self.entries = self
+            .entries
+            .iter_mut()
+            .map(|dotfile| dotfile.target_with_origin_filename())
+            .collect();
+
+        self
+    }
+
     fn filter_nonexistent_targets(&mut self) -> &mut Self {
         self.entries = self
             .entries
@@ -88,43 +103,17 @@ impl DotConfig {
 
 impl Dotfile {
     pub fn new(o: &str, t: &str) -> Dotfile {
-        let origin: Box<Path> = Path::new(o).into();
-        let target: Box<Path> = Path::new(t).into();
+        let origin: Box<PathBuf> = PathBuf::from(o).into();
+        let target: Box<PathBuf> = PathBuf::from(t).into();
 
         Dotfile { origin, target }
-    }
-
-    fn absolute_origin(&mut self) -> Option<Dotfile> {
-        let p = &mut self.origin;
-        match p.canonicalize() {
-            Ok(absolute_path) => {
-                self.origin = absolute_path.into();
-                Some(self.clone())
-            }
-            Err(_) => None,
-        }
-    }
-
-    fn absolute_target(&mut self, home_dir: &str) -> Option<Dotfile> {
-        let p = &self.target;
-        match parse_target(p, home_dir) {
-            Some(absolute_path) => {
-                self.target = absolute_path.into();
-                Some(self.clone())
-            }
-            None => None,
-        }
-    }
-
-    fn target_exists(&self) -> bool {
-        self.target.exists()
     }
 }
 
 impl From<(&'static str, &'static str)> for Dotfile {
     fn from(v: (&str, &str)) -> Self {
-        let origin: Box<Path> = Path::new(v.0).into();
-        let target: Box<Path> = Path::new(v.1).into();
+        let origin: Box<PathBuf> = PathBuf::from(v.0).into();
+        let target: Box<PathBuf> = PathBuf::from(v.1).into();
 
         Dotfile { origin, target }
     }
