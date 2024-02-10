@@ -1,11 +1,12 @@
-./Cargo.toml ~/.config/myapp/
-./Cargo.toml ~/.config/myfile
-./Cargo.toml ~/.config/non_existing_link
-./.tmux.conf ~/.config/myconf
-./Cargo.toml ~/.config/mydir
-./Cargo.toml ~/.config/hardlink
-./Cargo.toml /scary/root/path/
+#./Cargo.toml ~/.config/myapp/
+#./Cargo.toml ~/.config/myfile
+#./Cargo.toml ~/.config/non_existing_link
+#./.tmux.conf ~/.config/myconf
+#./Cargo.toml ~/.config/mydir
+#./Cargo.toml ~/.config/hardlink
+#./Cargo.toml /scary/root/path/
+./Cargo.toml ~/dotko/test/
 
-ö.txt ~/ö.txt
-/etc/grub.cfg ~/xd.cfg
-./scary_file.cfg /scary/root/path/
+#ö.txt ~/ö.txt
+#/etc/grub.cfg ~/xd.cfg
+#./scary_file.cfg /scary/root/path/

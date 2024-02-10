@@ -1,6 +1,6 @@
 use std::{env, fs, path::PathBuf};
 
-use super::{DotConfig, Dotfile};
+use super::DotConfig;
 
 impl DotConfig {
     pub(super) fn load_config(&mut self) -> &mut Self {
@@ -8,11 +8,14 @@ impl DotConfig {
             .unwrap()
             .lines()
             .filter_map(|line| {
-                let df: Option<Dotfile> = match line.try_into() {
-                    Ok(df) => Some(df),
-                    Err(_) => None,
-                };
-                df
+                if line.starts_with('#') {
+                    None
+                } else {
+                    match line.try_into() {
+                        Ok(dotfile) => Some(dotfile),
+                        Err(_) => None,
+                    }
+                }
             })
             .collect();
 
