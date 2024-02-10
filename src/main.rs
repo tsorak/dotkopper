@@ -1,5 +1,4 @@
 mod dotconfig;
-mod std_ext;
 mod utils;
 
 use dotconfig::DotConfig;

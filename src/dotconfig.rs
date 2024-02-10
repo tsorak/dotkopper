@@ -1,7 +1,4 @@
-use std::{
-    fmt::Debug,
-    path::{Path, PathBuf},
-};
+use std::{fmt::Debug, path::PathBuf};
 
 mod fs_checks;
 mod load_config;
@@ -11,7 +8,7 @@ use crate::utils::exit;
 
 #[derive(Debug)]
 pub(crate) struct DotConfig {
-    pub path: Box<Path>,
+    pub path: PathBuf,
     entries: Vec<Dotfile>,
     home_dir: String,
 }
@@ -35,7 +32,10 @@ impl Debug for Dotfile {
 
 impl DotConfig {
     pub fn new() -> Self {
-        let cfg_path = DotConfig::get_cfg_path();
+        let cfg_path = DotConfig::get_cfg_path().unwrap_or_else(|error| {
+            eprintln!("{error}");
+            std::process::exit(1);
+        });
 
         let home_dir = match std::env::var("HOME") {
             Ok(s) => s,
