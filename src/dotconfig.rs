@@ -54,10 +54,16 @@ impl DotConfig {
 
     pub fn init(&mut self) -> &mut Self {
         self.load_config()
+            .reject_invalid_origins()
             .absolute_origins()
             .absolute_targets()
             .append_origin_filename_to_target_dirs()
             .filter_nonexistent_targets()
+    }
+
+    fn reject_invalid_origins(&mut self) -> &mut Self {
+        self.entries.retain(|df| df.is_valid_origin());
+        self
     }
 
     fn absolute_origins(&mut self) -> &mut Self {
@@ -108,6 +114,10 @@ impl Dotfile {
         let target: Box<PathBuf> = PathBuf::from(t).into();
 
         Dotfile { origin, target }
+    }
+
+    fn is_valid_origin(&self) -> bool {
+        self.origin.starts_with("./")
     }
 }
 
