@@ -31,9 +31,7 @@ impl DotConfig {
 
         match cfg_arg {
             Some(user_input) => {
-                dbg!(&user_input);
-                let specified_path = cwd.join(&user_input);
-
+                let specified_path = cwd.join(user_input);
                 find_config_at(&specified_path)
             }
             None => find_config_at(&cwd),
@@ -42,28 +40,13 @@ impl DotConfig {
 }
 
 fn find_config_at(path: &PathBuf) -> Result<PathBuf, String> {
+    let file_name = path.file_name().unwrap();
+
     match path.metadata() {
-        Ok(m) => {
-            if m.is_dir() {
-                let maybe_cfg = path.join("dotkopper");
-                if maybe_cfg.is_file() {
-                    let cfg = maybe_cfg;
-                    Ok(cfg)
-                } else {
-                    Err(format!(
-                        "Could not find a config in the directory '{}'",
-                        path.display()
-                    ))
-                }
-            } else if m.is_file() && path.file_name().unwrap() == "dotkopper" {
-                Ok(path.to_owned())
-            } else {
-                Err(format!("Bad config path specified '{}'", path.display()))
-            }
-        }
-        Err(_) => Err(format!(
-            "Could not get information about '{}'",
-            path.display()
-        )),
+        Ok(m) if (m.is_file() && file_name == "dotkopper") => Ok(path.to_owned()),
+        Ok(m) if (m.is_dir() && path.join("dotkopper").is_file()) => Ok(path.join("dotkopper")),
+        Ok(m) if (m.is_dir()) => Err(format!("No config found in '{}'", path.display())),
+        Ok(_) => Err(format!("Bad config path specified '{}'", path.display())),
+        Err(_) => Err(format!("Could not read '{}'", path.display())),
     }
 }
