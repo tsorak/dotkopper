@@ -61,10 +61,12 @@ impl DotConfig {
     }
 
     fn absolute_origins(&mut self) -> &mut Self {
+        let relative_path_stem = self.path.parent().unwrap();
+
         self.entries = self
             .entries
             .iter_mut()
-            .filter_map(|dotfile| dotfile.absolute_origin())
+            .map(|dotfile| dotfile.absolute_origin(relative_path_stem))
             .collect();
         self
     }
@@ -84,7 +86,6 @@ impl DotConfig {
             .iter_mut()
             .map(|dotfile| dotfile.target_with_origin_filename())
             .collect();
-
         self
     }
 

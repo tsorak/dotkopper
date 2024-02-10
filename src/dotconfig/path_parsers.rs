@@ -2,7 +2,7 @@ use std::path::{Path, PathBuf};
 
 use super::Dotfile;
 
-pub(super) fn parse_target(p: &Path, home_dir: &str) -> Option<PathBuf> {
+fn parse_target(p: &Path, home_dir: &str) -> Option<PathBuf> {
     let s = p.to_str()?;
     match s.chars().collect::<Vec<_>>()[..] {
         ['~', '/', ..] => {

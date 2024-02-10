@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use super::Dotfile;
 
 impl Dotfile {
@@ -5,14 +7,14 @@ impl Dotfile {
         self.target.exists()
     }
 
-    pub(super) fn absolute_origin(&mut self) -> Option<Dotfile> {
-        let p = &mut self.origin;
-        match p.canonicalize() {
-            Ok(absolute_path) => {
-                self.origin = absolute_path.into();
-                Some(self.clone())
-            }
-            Err(_) => None,
-        }
+    pub(super) fn absolute_origin(&mut self, relative_path_stem: &Path) -> Self {
+        if let ['.', '/', origin_path @ ..] =
+            &self.origin.to_str().unwrap().chars().collect::<Vec<char>>()[..]
+        {
+            let o: String = origin_path.iter().collect();
+            self.origin = Box::new(relative_path_stem.join(o));
+        };
+
+        self.clone()
     }
 }
