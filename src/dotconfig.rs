@@ -3,6 +3,7 @@ use std::{fmt::Debug, path::PathBuf};
 mod fs_checks;
 mod load_config;
 mod path_parsers;
+mod reporters;
 
 use crate::utils::exit;
 
@@ -54,11 +55,19 @@ impl DotConfig {
 
     pub fn init(&mut self) -> &mut Self {
         self.load_config()
+            .report_bad_origin_paths()
             .reject_invalid_origins()
             .absolute_origins()
             .absolute_targets()
             .append_origin_filename_to_target_dirs()
             .filter_nonexistent_targets()
+    }
+
+    fn report_bad_origin_paths(&mut self) -> &mut Self {
+        self.entries
+            .iter()
+            .for_each(|df| df.report_bad_origin_path());
+        self
     }
 
     fn reject_invalid_origins(&mut self) -> &mut Self {
