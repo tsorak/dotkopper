@@ -31,6 +31,7 @@ impl Dotfile {
         let Dotfile {
             origin: o,
             target: t,
+            ..
         } = self;
 
         if t.to_str().unwrap().ends_with('/') {

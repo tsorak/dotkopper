@@ -18,17 +18,26 @@ pub(crate) struct DotConfig {
 struct Dotfile {
     pub origin: Box<PathBuf>,
     pub target: Box<PathBuf>,
+    target_status: Option<TargetStatus>,
 }
 
 impl Debug for Dotfile {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "{} -> {}",
-            self.origin.to_string_lossy(),
-            self.target.to_string_lossy()
+            "[{}] {} -> {}",
+            self.target_status_human_readable(),
+            self.origin.display(),
+            self.target.display()
         )
     }
+}
+
+#[derive(Clone)]
+enum TargetStatus {
+    Unlinked = 0,
+    Occupied = 1,
+    Linked = 2,
 }
 
 impl DotConfig {
@@ -60,7 +69,8 @@ impl DotConfig {
             .absolute_origins()
             .absolute_targets()
             .append_origin_filename_to_target_dirs()
-            .filter_nonexistent_targets()
+            .update_target_statuses()
+            .filter_nonexistent_targets() // TODO use target_status field to decide
     }
 
     fn report_bad_origin_paths(&mut self) -> &mut Self {
@@ -104,6 +114,15 @@ impl DotConfig {
         self
     }
 
+    fn update_target_statuses(&mut self) -> &mut Self {
+        self.entries = self
+            .entries
+            .iter_mut()
+            .map(|dotfile| dotfile.update_target_status())
+            .collect();
+        self
+    }
+
     fn filter_nonexistent_targets(&mut self) -> &mut Self {
         self.entries = self
             .entries
@@ -122,11 +141,24 @@ impl Dotfile {
         let origin: Box<PathBuf> = PathBuf::from(o).into();
         let target: Box<PathBuf> = PathBuf::from(t).into();
 
-        Dotfile { origin, target }
+        Dotfile {
+            origin,
+            target,
+            target_status: None,
+        }
     }
 
     fn is_valid_origin(&self) -> bool {
         self.origin.starts_with("./")
+    }
+
+    fn target_status_human_readable(&self) -> &str {
+        match self.target_status {
+            Some(TargetStatus::Linked) => "LINKED",
+            Some(TargetStatus::Occupied) => "OCCUPIED",
+            Some(TargetStatus::Unlinked) => "UNLINKED",
+            None => "UNSET",
+        }
     }
 }
 
@@ -135,7 +167,11 @@ impl From<(&'static str, &'static str)> for Dotfile {
         let origin: Box<PathBuf> = PathBuf::from(v.0).into();
         let target: Box<PathBuf> = PathBuf::from(v.1).into();
 
-        Dotfile { origin, target }
+        Dotfile {
+            origin,
+            target,
+            target_status: None,
+        }
     }
 }
 
