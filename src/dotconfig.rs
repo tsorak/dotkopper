@@ -70,7 +70,12 @@ impl DotConfig {
             .absolute_targets()
             .append_origin_filename_to_target_dirs()
             .update_target_statuses()
-            .filter_nonexistent_targets() // TODO use target_status field to decide
+            .dbg()
+            .filter_valid_targets()
+    }
+
+    fn dbg(&mut self) -> &mut Self {
+        dbg!(self)
     }
 
     fn report_bad_origin_paths(&mut self) -> &mut Self {
@@ -123,15 +128,9 @@ impl DotConfig {
         self
     }
 
-    fn filter_nonexistent_targets(&mut self) -> &mut Self {
-        self.entries = self
-            .entries
-            .iter()
-            .filter_map(|dotfile| match dotfile.target_exists() {
-                false => Some(dotfile.clone()),
-                true => None,
-            })
-            .collect();
+    fn filter_valid_targets(&mut self) -> &mut Self {
+        self.entries
+            .retain(|df| matches!(df.target_status, Some(TargetStatus::Unlinked)));
         self
     }
 }
