@@ -6,13 +6,14 @@ impl Dotfile {
     pub(super) fn update_target_status(&mut self) -> Dotfile {
         let Dotfile { origin, target, .. } = self;
 
-        self.target_status = Some(match target.try_exists() {
+        let status = match target.try_exists() {
             Err(_read_error) => TargetStatus::Occupied,
             Ok(false) => TargetStatus::Unlinked,
             Ok(true) if is_link(target) && is_linked_to(target, origin) => TargetStatus::Linked,
             Ok(true) if is_link(target) => TargetStatus::Occupied,
             Ok(true) => TargetStatus::Occupied,
-        });
+        };
+        self.target_status = Some(status);
 
         self.clone()
     }

@@ -70,7 +70,7 @@ impl DotConfig {
             .absolute_targets()
             .append_origin_filename_to_target_dirs()
             .update_target_statuses()
-            .dbg()
+            .report_target_statuses()
             .filter_valid_targets()
     }
 
@@ -125,6 +125,13 @@ impl DotConfig {
             .iter_mut()
             .map(|dotfile| dotfile.update_target_status())
             .collect();
+        self
+    }
+
+    fn report_target_statuses(&mut self) -> &mut Self {
+        self.entries
+            .iter()
+            .for_each(|dotfile| dotfile.report_target_status());
         self
     }
 
