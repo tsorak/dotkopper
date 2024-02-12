@@ -5,8 +5,6 @@ mod load_config;
 mod path_parsers;
 mod reporters;
 
-use crate::utils::exit;
-
 #[derive(Debug)]
 pub(crate) struct DotConfig {
     pub path: PathBuf,
@@ -50,8 +48,8 @@ impl DotConfig {
         let home_dir = match std::env::var("HOME") {
             Ok(s) => s,
             Err(_) => {
-                exit::home_var_not_found();
-                unreachable!();
+                eprintln!("Could not find the current users HOME.");
+                std::process::exit(1);
             }
         };
 

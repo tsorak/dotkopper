@@ -1,6 +1,4 @@
 mod dotconfig;
-mod utils;
-
 use dotconfig::DotConfig;
 
 fn main() {
