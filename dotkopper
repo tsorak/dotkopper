@@ -1,7 +1,7 @@
-ö.txt ~/ö.txt
-/etc/grub.cfg ~/xd.cfg
+# ö.txt ~/ö.txt
+# /etc/grub.cfg ~/xd.cfg
 
 ./scary_file.cfg /scary/root/path/
-./.tmux.conf ~/dotko/test/
-./Cargo.lock ~/dotko/test/mylink
-./Cargo.lock ~/dotko/test/myfile
+# ./.tmux.conf ~/dotko/test/
+# ./Cargo.lock ~/dotko/test/mylink
+# ./Cargo.lock ~/dotko/test/myfile

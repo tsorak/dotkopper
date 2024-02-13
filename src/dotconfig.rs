@@ -1,12 +1,15 @@
 use std::{fmt::Debug, path::PathBuf};
 
 mod fs_checks;
+mod linker;
 mod load_config;
 mod path_parsers;
 mod reporters;
 
+use self::linker::DotfileLinkError;
+
 #[derive(Debug)]
-pub(crate) struct DotConfig {
+pub struct DotConfig {
     pub path: PathBuf,
     entries: Vec<Dotfile>,
     home_dir: String,
@@ -137,6 +140,43 @@ impl DotConfig {
         self.entries
             .retain(|df| matches!(df.target_status, Some(TargetStatus::Unlinked)));
         self
+    }
+
+    #[cfg(target_os = "linux")]
+    pub fn create_symlinks(&mut self) -> Result<(), Vec<DotfileLinkError>> {
+        use std::path::Path;
+
+        if self.entries.is_empty() {
+            return Ok(());
+        };
+
+        let errors: Vec<DotfileLinkError> = self
+            .entries
+            .iter()
+            .filter_map(|dotfile| {
+                if dotfile
+                    .target
+                    .parent()
+                    .is_some_and(|p| p.ne(Path::new("/")) && !p.exists())
+                {
+                    dbg!("huh");
+                    if let Some(error) = dotfile.ensure_target_filetree_exists() {
+                        return Some(error);
+                    };
+                }
+
+                match dotfile.create_symlink() {
+                    Err(e) => Some(e),
+                    Ok(_) => None,
+                }
+            })
+            .collect();
+
+        if errors.is_empty() {
+            Ok(())
+        } else {
+            Err(errors)
+        }
     }
 }
 
