@@ -13,8 +13,15 @@ fn main() {
     let link_result = cfg.create_symlinks();
     match link_result {
         Ok(_) => println!("YIPPIE!"),
-        Err(LinkError(summary, _)) => {
+        Err(LinkError(summary, errors)) => {
             println!("{}", summary);
+
+            if !errors.is_empty() {
+                errors
+                    .iter()
+                    .for_each(|err| eprintln!("{}", err.format_error()))
+            }
+
             std::process::exit(1);
         }
     };

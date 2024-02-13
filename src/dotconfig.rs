@@ -175,7 +175,7 @@ impl DotConfig {
         use std::path::Path;
 
         if self.entries.is_empty() {
-            return Err(LinkError::new("No dotfiles to link"));
+            return Err(LinkError::new("No dotfiles to link."));
         };
 
         let errors: Vec<DotfileLinkError> = self
@@ -202,7 +202,7 @@ impl DotConfig {
         if errors.is_empty() {
             Ok(())
         } else {
-            Err(LinkError("Errors while linking dotfiles", errors))
+            Err(LinkError("Error while linking dotfiles.", errors))
         }
     }
 }
