@@ -205,6 +205,23 @@ impl DotConfig {
             Err(LinkError("Error while linking dotfiles.", errors))
         }
     }
+
+    pub fn has_linkable_dotfiles(&self) -> bool {
+        if self.entries.is_empty() {
+            return false;
+        }
+
+        let unlinked = self
+            .entries
+            .iter()
+            .filter_map(|df| match df.target_status {
+                Some(TargetStatus::Unlinked) => Some(()),
+                _ => None,
+            })
+            .collect::<Vec<()>>();
+
+        !unlinked.is_empty()
+    }
 }
 
 impl Dotfile {

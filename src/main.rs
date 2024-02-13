@@ -8,10 +8,14 @@ fn main() {
     println!("Using config '{}'...", &cfg.path.display());
     cfg.init();
 
+    if !cfg.has_linkable_dotfiles() {
+        println!("\nNo dotfiles to link.");
+        std::process::exit(1);
+    }
+
     wait_for_enter();
 
-    let link_result = cfg.create_symlinks();
-    match link_result {
+    match cfg.create_symlinks() {
         Ok(_) => println!("YIPPIE!"),
         Err(LinkError(summary, errors)) => {
             println!("{}", summary);
@@ -30,7 +34,7 @@ fn main() {
 fn wait_for_enter() {
     let mut input = String::new();
     println!();
-    print!("Press Enter to continue...");
+    print!("Press Enter to link files...");
     io::stdout().flush().expect("Failed to flush stdout");
     io::stdin()
         .read_line(&mut input)
