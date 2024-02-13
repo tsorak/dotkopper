@@ -52,4 +52,8 @@ impl Dotfile {
 
         self.clone()
     }
+
+    pub(super) fn is_valid_origin(&self) -> bool {
+        self.origin.starts_with("./")
+    }
 }

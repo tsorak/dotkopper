@@ -1,12 +1,13 @@
 use std::{fmt::Debug, path::PathBuf};
 
+pub mod errors;
 mod fs_checks;
 mod linker;
 mod load_config;
 mod path_parsers;
 mod reporters;
 
-use self::linker::DotfileLinkError;
+pub use self::errors::*;
 
 #[derive(Debug)]
 pub struct DotConfig {
@@ -115,6 +116,7 @@ impl DotConfig {
             .collect::<Vec<()>>();
 
         if !errors.is_empty() {
+            println!();
             println!("Origins should be specified relatively to the dotkopper config file.");
             println!("A sibling to the dotkopper config is written as './my_config_file.cfg'");
         };
@@ -155,6 +157,7 @@ impl DotConfig {
     }
 
     fn report_target_statuses(&mut self) -> &mut Self {
+        println!();
         self.entries
             .iter()
             .for_each(|dotfile| dotfile.report_target_status());
@@ -168,11 +171,11 @@ impl DotConfig {
     }
 
     #[cfg(target_os = "linux")]
-    pub fn create_symlinks(&mut self) -> Result<(), Vec<DotfileLinkError>> {
+    pub fn create_symlinks(&mut self) -> Result<(), LinkError> {
         use std::path::Path;
 
         if self.entries.is_empty() {
-            return Ok(());
+            return Err(LinkError::new("No dotfiles to link"));
         };
 
         let errors: Vec<DotfileLinkError> = self
@@ -184,7 +187,6 @@ impl DotConfig {
                     .parent()
                     .is_some_and(|p| p.ne(Path::new("/")) && !p.exists())
                 {
-                    dbg!("huh");
                     if let Some(error) = dotfile.ensure_target_filetree_exists() {
                         return Some(error);
                     };
@@ -200,7 +202,7 @@ impl DotConfig {
         if errors.is_empty() {
             Ok(())
         } else {
-            Err(errors)
+            Err(LinkError("Errors while linking dotfiles", errors))
         }
     }
 }
@@ -215,10 +217,6 @@ impl Dotfile {
             target,
             target_status: None,
         }
-    }
-
-    fn is_valid_origin(&self) -> bool {
-        self.origin.starts_with("./")
     }
 
     fn target_status_human_readable(&self) -> &str {

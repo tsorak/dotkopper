@@ -1,14 +1,6 @@
+use super::errors::DotfileLinkError;
 use super::Dotfile;
-use std::{io, os};
-
-#[derive(Debug)]
-pub struct DotfileLinkError(Dotfile, io::Error);
-
-impl DotfileLinkError {
-    pub(super) fn new(error: io::Error, dotfile: Dotfile) -> Self {
-        Self(dotfile, error)
-    }
-}
+use std::os;
 
 impl Dotfile {
     pub(super) fn ensure_target_filetree_exists(&self) -> Option<DotfileLinkError> {
