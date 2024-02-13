@@ -66,17 +66,15 @@ impl DotConfig {
     pub fn init(&mut self) -> &mut Self {
         self.load_config()
             .report_bad_origin_paths()
-            .reject_invalid_origins()
+            .reject_invalid_path_origins()
             .absolute_origins()
+            .report_nonexistent_origins()
+            .reject_nonexistent_origins()
             .absolute_targets()
             .append_origin_filename_to_target_dirs()
             .update_target_statuses()
             .report_target_statuses()
-            .filter_valid_targets()
-    }
-
-    fn dbg(&mut self) -> &mut Self {
-        dbg!(self)
+            .retain_unlinked_targets()
     }
 
     fn report_bad_origin_paths(&mut self) -> &mut Self {
@@ -86,7 +84,7 @@ impl DotConfig {
         self
     }
 
-    fn reject_invalid_origins(&mut self) -> &mut Self {
+    fn reject_invalid_path_origins(&mut self) -> &mut Self {
         self.entries.retain(|df| df.is_valid_origin());
         self
     }
@@ -99,6 +97,33 @@ impl DotConfig {
             .iter_mut()
             .map(|dotfile| dotfile.absolute_origin(relative_path_stem))
             .collect();
+        self
+    }
+
+    fn report_nonexistent_origins(&mut self) -> &mut Self {
+        let errors = self
+            .entries
+            .iter()
+            .filter_map(|df| {
+                if !df.origin_exists() {
+                    println!("Origin does not exist '{}'", df.origin.display());
+                    Some(())
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<()>>();
+
+        if !errors.is_empty() {
+            println!("Origins should be specified relatively to the dotkopper config file.");
+            println!("A sibling to the dotkopper config is written as './my_config_file.cfg'");
+        };
+
+        self
+    }
+
+    fn reject_nonexistent_origins(&mut self) -> &mut Self {
+        self.entries.retain(|df| df.origin_exists());
         self
     }
 
@@ -136,7 +161,7 @@ impl DotConfig {
         self
     }
 
-    fn filter_valid_targets(&mut self) -> &mut Self {
+    fn retain_unlinked_targets(&mut self) -> &mut Self {
         self.entries
             .retain(|df| matches!(df.target_status, Some(TargetStatus::Unlinked)));
         self

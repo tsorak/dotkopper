@@ -17,6 +17,10 @@ impl Dotfile {
 
         self.clone()
     }
+
+    pub(super) fn origin_exists(&self) -> bool {
+        self.origin.exists()
+    }
 }
 
 fn is_link(p: &Path) -> bool {
