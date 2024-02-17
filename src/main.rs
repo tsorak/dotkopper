@@ -4,9 +4,9 @@ mod dotconfig;
 use dotconfig::{DotConfig, LinkError};
 
 fn main() {
-    let mut cfg = DotConfig::new();
+    let cfg = DotConfig::new();
     println!("Using config '{}'...", &cfg.path.display());
-    cfg.init();
+    let cfg = cfg.init();
 
     if !cfg.has_linkable_dotfiles() {
         println!("\nNo dotfiles to link.");
@@ -16,7 +16,7 @@ fn main() {
     wait_for_enter();
 
     match cfg.create_symlinks() {
-        Ok(_) => println!("YIPPIE!"),
+        Ok(_) => println!("Links created successfully!"),
         Err(LinkError(summary, errors)) => {
             println!("{}", summary);
 
@@ -29,6 +29,8 @@ fn main() {
             std::process::exit(1);
         }
     };
+
+    cfg.update_target_statuses().report_statuses();
 }
 
 fn wait_for_enter() {

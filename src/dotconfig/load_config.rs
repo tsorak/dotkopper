@@ -3,7 +3,7 @@ use std::{env, fs, path::PathBuf};
 use super::DotConfig;
 
 impl DotConfig {
-    pub(super) fn load_config(&mut self) -> &mut Self {
+    pub(super) fn load_config(mut self) -> Self {
         self.entries = fs::read_to_string(&self.path)
             .unwrap()
             .lines()

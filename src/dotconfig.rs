@@ -1,4 +1,7 @@
-use std::{fmt::Debug, path::PathBuf};
+use std::{
+    fmt::Debug,
+    path::{Path, PathBuf},
+};
 
 pub mod errors;
 mod fs_checks;
@@ -18,8 +21,8 @@ pub struct DotConfig {
 
 #[derive(Clone)]
 struct Dotfile {
-    pub origin: Box<PathBuf>,
-    pub target: Box<PathBuf>,
+    pub origin: PathBuf,
+    pub target: PathBuf,
     target_status: Option<TargetStatus>,
 }
 
@@ -64,7 +67,7 @@ impl DotConfig {
         }
     }
 
-    pub fn init(&mut self) -> &mut Self {
+    pub fn init(self) -> Self {
         self.load_config()
             .report_bad_origin_paths()
             .reject_invalid_path_origins()
@@ -74,34 +77,32 @@ impl DotConfig {
             .absolute_targets()
             .append_origin_filename_to_target_dirs()
             .update_target_statuses()
-            .report_target_statuses()
+            .report_statuses()
             .retain_unlinked_targets()
     }
 
-    fn report_bad_origin_paths(&mut self) -> &mut Self {
+    fn report_bad_origin_paths(self) -> Self {
         self.entries
             .iter()
             .for_each(|df| df.report_bad_origin_path());
         self
     }
 
-    fn reject_invalid_path_origins(&mut self) -> &mut Self {
+    fn reject_invalid_path_origins(mut self) -> Self {
         self.entries.retain(|df| df.is_valid_origin());
         self
     }
 
-    fn absolute_origins(&mut self) -> &mut Self {
+    fn absolute_origins(mut self) -> Self {
         let relative_path_stem = self.path.parent().unwrap();
 
-        self.entries = self
-            .entries
-            .iter_mut()
-            .map(|dotfile| dotfile.absolute_origin(relative_path_stem))
-            .collect();
+        self.entries.iter_mut().for_each(|dotfile| {
+            dotfile.absolute_origin(relative_path_stem);
+        });
         self
     }
 
-    fn report_nonexistent_origins(&mut self) -> &mut Self {
+    fn report_nonexistent_origins(self) -> Self {
         let errors = self
             .entries
             .iter()
@@ -124,56 +125,56 @@ impl DotConfig {
         self
     }
 
-    fn reject_nonexistent_origins(&mut self) -> &mut Self {
+    fn reject_nonexistent_origins(mut self) -> Self {
         self.entries.retain(|df| df.origin_exists());
         self
     }
 
-    fn absolute_targets(&mut self) -> &mut Self {
+    fn absolute_targets(mut self) -> Self {
         self.entries = self
             .entries
-            .iter_mut()
-            .filter_map(|dotfile| dotfile.absolute_target(&self.home_dir))
+            .into_iter()
+            .filter_map(
+                |mut dotfile| match dotfile.absolute_target(&self.home_dir) {
+                    Ok(_) => Some(dotfile),
+                    Err(_) => None,
+                },
+            )
             .collect();
+
         self
     }
 
-    fn append_origin_filename_to_target_dirs(&mut self) -> &mut Self {
-        self.entries = self
-            .entries
-            .iter_mut()
-            .map(|dotfile| dotfile.target_with_origin_filename())
-            .collect();
+    fn append_origin_filename_to_target_dirs(mut self) -> Self {
+        self.entries.iter_mut().for_each(|dotfile| {
+            dotfile.target_with_origin_filename();
+        });
         self
     }
 
-    fn update_target_statuses(&mut self) -> &mut Self {
-        self.entries = self
-            .entries
-            .iter_mut()
-            .map(|dotfile| dotfile.update_target_status())
-            .collect();
+    pub fn update_target_statuses(mut self) -> Self {
+        self.entries.iter_mut().for_each(|dotfile| {
+            dotfile.update_target_status();
+        });
         self
     }
 
-    fn report_target_statuses(&mut self) -> &mut Self {
+    pub fn report_statuses(self) -> Self {
         println!();
         self.entries
             .iter()
-            .for_each(|dotfile| dotfile.report_target_status());
+            .for_each(|dotfile| dotfile.report_status());
         self
     }
 
-    fn retain_unlinked_targets(&mut self) -> &mut Self {
+    fn retain_unlinked_targets(mut self) -> Self {
         self.entries
             .retain(|df| matches!(df.target_status, Some(TargetStatus::Unlinked)));
         self
     }
 
     #[cfg(target_os = "linux")]
-    pub fn create_symlinks(&mut self) -> Result<(), LinkError> {
-        use std::path::Path;
-
+    pub fn create_symlinks(&self) -> Result<(), LinkError> {
         if self.entries.is_empty() {
             return Err(LinkError::new("No dotfiles to link."));
         };
@@ -182,9 +183,8 @@ impl DotConfig {
             .entries
             .iter()
             .filter_map(|dotfile| {
-                if dotfile
-                    .target
-                    .parent()
+                let t = &dotfile.target;
+                if t.parent()
                     .is_some_and(|p| p.ne(Path::new("/")) && !p.exists())
                 {
                     if let Some(error) = dotfile.ensure_target_filetree_exists() {
@@ -226,12 +226,9 @@ impl DotConfig {
 
 impl Dotfile {
     pub fn new(o: &str, t: &str) -> Dotfile {
-        let origin: Box<PathBuf> = PathBuf::from(o).into();
-        let target: Box<PathBuf> = PathBuf::from(t).into();
-
         Dotfile {
-            origin,
-            target,
+            origin: o.into(),
+            target: t.into(),
             target_status: None,
         }
     }
@@ -247,13 +244,10 @@ impl Dotfile {
 }
 
 impl From<(&'static str, &'static str)> for Dotfile {
-    fn from(v: (&str, &str)) -> Self {
-        let origin: Box<PathBuf> = PathBuf::from(v.0).into();
-        let target: Box<PathBuf> = PathBuf::from(v.1).into();
-
+    fn from((o, t): (&str, &str)) -> Self {
         Dotfile {
-            origin,
-            target,
+            origin: o.into(),
+            target: t.into(),
             target_status: None,
         }
     }

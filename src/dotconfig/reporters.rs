@@ -5,11 +5,11 @@ impl Dotfile {
         let Self { origin: o, .. } = self;
 
         if !o.starts_with("./") {
-            eprintln!("❌ BAD ORIGIN PATH '{}'", o.display());
+            eprintln!("BAD ORIGIN PATH '{}'", o.display());
         };
     }
 
-    pub(super) fn report_target_status(&self) {
+    pub(super) fn report_status(&self) {
         let Dotfile {
             origin: o,
             target: t,
@@ -20,7 +20,7 @@ impl Dotfile {
 
         let message = match *target_status {
             Some(TargetStatus::Unlinked) => {
-                format!("Linking '{}' to '{}'", o.display(), t.display())
+                format!("'{}' -> '{}'", o.display(), t.display())
             }
             Some(TargetStatus::Occupied) => {
                 format!("ERROR: A file exists at target path '{}'", t.display())

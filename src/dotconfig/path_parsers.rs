@@ -2,7 +2,7 @@ use std::path::{Path, PathBuf};
 
 use super::Dotfile;
 
-fn parse_target(p: &Path, home_dir: &str) -> Option<PathBuf> {
+fn make_target_absolute(p: &Path, home_dir: &str) -> Option<PathBuf> {
     let s = p.to_str()?;
     match s.chars().collect::<Vec<_>>()[..] {
         ['~', '/', ..] => {
@@ -16,18 +16,18 @@ fn parse_target(p: &Path, home_dir: &str) -> Option<PathBuf> {
 }
 
 impl Dotfile {
-    pub(super) fn absolute_target(&mut self, home_dir: &str) -> Option<Dotfile> {
-        let p = &self.target;
-        match parse_target(p, home_dir) {
+    pub(super) fn absolute_target(&mut self, home_dir: &str) -> Result<(), ()> {
+        let t = &self.target;
+        match make_target_absolute(t, home_dir) {
             Some(absolute_path) => {
-                self.target = absolute_path.into();
-                Some(self.clone())
+                self.target = absolute_path;
+                Ok(())
             }
-            None => None,
+            None => Err(()),
         }
     }
 
-    pub(super) fn target_with_origin_filename(&mut self) -> Dotfile {
+    pub(super) fn target_with_origin_filename(&mut self) {
         let Dotfile {
             origin: o,
             target: t,
@@ -36,21 +36,17 @@ impl Dotfile {
 
         if t.to_str().unwrap().ends_with('/') {
             let origin_filename = o.file_name().unwrap();
-            self.target = Box::new(self.target.join(origin_filename));
-        }
-
-        self.clone()
+            self.target = t.join(origin_filename);
+        };
     }
 
-    pub(super) fn absolute_origin(&mut self, relative_path_stem: &Path) -> Self {
+    pub(super) fn absolute_origin(&mut self, relative_path_stem: &Path) {
         if let ['.', '/', origin_path @ ..] =
             &self.origin.to_str().unwrap().chars().collect::<Vec<char>>()[..]
         {
             let o: String = origin_path.iter().collect();
-            self.origin = Box::new(relative_path_stem.join(o));
+            self.origin = relative_path_stem.join(o);
         };
-
-        self.clone()
     }
 
     pub(super) fn is_valid_origin(&self) -> bool {
