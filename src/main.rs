@@ -6,7 +6,7 @@ use dotconfig::{DotConfig, LinkError};
 fn main() {
     let cfg = DotConfig::new();
     println!("Using config '{}'...", &cfg.path.display());
-    let cfg = cfg.init();
+    let cfg = cfg.init_multithreaded();
 
     if !cfg.has_linkable_dotfiles() {
         println!("\nNo dotfiles to link.");

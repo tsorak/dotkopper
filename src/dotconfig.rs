@@ -7,6 +7,7 @@ pub mod errors;
 mod fs_checks;
 mod linker;
 mod load_config;
+mod multithread;
 mod path_parsers;
 mod reporters;
 
@@ -16,7 +17,7 @@ pub use self::errors::*;
 pub struct DotConfig {
     pub path: PathBuf,
     entries: Vec<Dotfile>,
-    home_dir: String,
+    home_dir: PathBuf,
 }
 
 #[derive(Clone)]
@@ -63,7 +64,7 @@ impl DotConfig {
         DotConfig {
             path: cfg_path,
             entries: vec![],
-            home_dir,
+            home_dir: home_dir.into(),
         }
     }
 

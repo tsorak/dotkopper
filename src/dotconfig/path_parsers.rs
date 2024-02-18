@@ -2,12 +2,17 @@ use std::path::{Path, PathBuf};
 
 use super::Dotfile;
 
-fn make_target_absolute(p: &Path, home_dir: &str) -> Option<PathBuf> {
+fn make_target_absolute(p: &Path, home_dir: &Path) -> Option<PathBuf> {
     let s = p.to_str()?;
     match s.chars().collect::<Vec<_>>()[..] {
         ['~', '/', ..] => {
             let mut t = s.get(1..).unwrap().to_owned();
-            t.insert_str(0, home_dir);
+            t.insert_str(
+                0,
+                home_dir
+                    .to_str()
+                    .expect("Path to home contains illegal characters"),
+            );
             Some(t.into())
         }
         ['/', ..] => Some(p.into()),
@@ -16,7 +21,7 @@ fn make_target_absolute(p: &Path, home_dir: &str) -> Option<PathBuf> {
 }
 
 impl Dotfile {
-    pub(super) fn absolute_target(&mut self, home_dir: &str) -> Result<(), ()> {
+    pub(super) fn absolute_target(&mut self, home_dir: &Path) -> Result<(), ()> {
         let t = &self.target;
         match make_target_absolute(t, home_dir) {
             Some(absolute_path) => {
