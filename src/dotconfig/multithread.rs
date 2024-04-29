@@ -21,11 +21,9 @@ impl DotConfig {
         let handles = dotfiles
             .into_iter()
             .map(|dotfile| {
-                let threads_home_dir_ref = Arc::clone(&home_dir_ref);
-                let threads_origin_stem_ref = Arc::clone(&origin_stem_ref);
-                thread::spawn(move || {
-                    parse_dotfile(dotfile, &threads_origin_stem_ref, &threads_home_dir_ref)
-                })
+                let stem = Arc::clone(&origin_stem_ref);
+                let home = Arc::clone(&home_dir_ref);
+                thread::spawn(move || parse_dotfile(dotfile, &stem, &home))
             })
             .collect::<Vec<JoinHandle<Option<Dotfile>>>>();
 
