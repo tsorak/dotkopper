@@ -3,6 +3,9 @@ use std::io::{self, Write};
 mod dotconfig;
 use dotconfig::{DotConfig, LinkError};
 
+mod feature;
+use feature::FeatureMerger;
+
 fn main() {
     let cfg = DotConfig::new();
     println!("Using config '{}'...", &cfg.path.display());

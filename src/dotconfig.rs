@@ -21,7 +21,7 @@ pub struct DotConfig {
 }
 
 #[derive(Clone)]
-struct Dotfile {
+pub(crate) struct Dotfile {
     pub origin: PathBuf,
     pub target: PathBuf,
     target_status: Option<TargetStatus>,
